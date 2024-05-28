@@ -1,0 +1,97 @@
+code,label,rule
+"def print_list(my_list):
+    """"""This should be indented""""""
+    print('Nope')",1,E112
+"def add(a, b):
+    return a + b",1,E112
+"if True:
+    print('True')",1,E112
+"for i in range(5):
+    print(i)",1,E112
+"class MyClass:
+    def method(self):
+        pass",1,E112
+"while False:
+    break",1,E112
+"try:
+    x = 1/0
+except ZeroDivisionError:
+    print('Error')",1,E112
+"with open('file.txt', 'r') as f:
+    content = f.read()",1,E112
+"def greet(name):
+    print(f'Hello, {name}')",1,E112
+"if x > 0:
+    x -= 1",1,E112
+"for item in my_list:
+    print(item)",1,E112
+"class AnotherClass:
+    def __init__(self, value):
+        self.value = value",1,E112
+"if y == 0:
+    y += 1",1,E112
+"while x < 10:
+    x += 1",1,E112
+"def subtract(a, b):
+    result = a - b
+    return result",1,E112
+"if not found:
+    search()",1,E112
+"def multiply(a, b):
+    return a * b",1,E112
+"for i in range(10):
+    print(i)",1,E112
+"try:
+    y = int('abc')
+except ValueError:
+    print('Not a number')",1,E112
+"while condition:
+    do_something()",1,E112
+"def print_list(my_list):
+""""""This should be indented""""""
+    print('Nope')",0,E112
+"def add(a, b):
+return a + b",0,E112
+"if True:
+print('True')",0,E112
+"for i in range(5):
+print(i)",0,E112
+"class MyClass:
+def method(self):
+        pass",0,E112
+"while False:
+break",0,E112
+"try:
+x = 1/0
+except ZeroDivisionError:
+    print('Error')",0,E112
+"with open('file.txt', 'r') as f:
+content = f.read()",0,E112
+"def greet(name):
+print(f'Hello, {name}')",0,E112
+"if x > 0:
+x -= 1",0,E112
+"for item in my_list:
+print(item)",0,E112
+"class AnotherClass:
+def __init__(self, value):
+        self.value = value",0,E112
+"if y == 0:
+y += 1",0,E112
+"while x < 10:
+x += 1",0,E112
+"def subtract(a, b):
+result = a - b
+    return result",0,E112
+"if not found:
+search()",0,E112
+"def multiply(a, b):
+return a * b",0,E112
+"for i in range(10):
+print(i)",0,E112
+"try:
+y = int('abc')
+except ValueError:
+    print('Not a number')",0,E112
+"while condition:
+do_something()",0,E112

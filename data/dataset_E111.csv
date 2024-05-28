@@ -1,0 +1,125 @@
+code,label,rule
+"class User(object):
+    def __init__(self, name):
+        self.name = name",1,E111
+"def add(a, b):
+    return a + b",1,E111
+"if True:
+    print('Yes')",1,E111
+"for i in range(5):
+    print(i)",1,E111
+"while True:
+    break",1,E111
+"def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)",1,E111
+"with open('file.txt', 'r') as f:
+    content = f.read()",1,E111
+"try:
+    1 / 0
+except ZeroDivisionError:
+    pass",1,E111
+"def is_even(n):
+    return n % 2 == 0",1,E111
+"class Animal:
+    def speak(self):
+        pass
+class Dog(Animal):
+    def speak(self):
+        return 'Woof!'",1,E111
+"for item in [1, 2, 3]:
+    print(item)",1,E111
+"def greet(name):
+    print(f'Hello, {name}!')",1,E111
+"x = 10
+while x > 0:
+    x -= 1",1,E111
+"names = ['Alice', 'Bob', 'Charlie']
+for name in names:
+    print(name)",1,E111
+"if x > 10:
+    print('x is greater than 10')
+else:
+    print('x is 10 or less')",1,E111
+"try:
+    result = some_function()
+except Exception as e:
+    print(e)",1,E111
+"def max(a, b):
+    if a > b:
+        return a
+    else:
+        return b",1,E111
+"class Car:
+    def __init__(self, model):
+        self.model = model",1,E111
+"if True:
+    pass
+else:
+    print('This won’t print')",1,E111
+"with open('file.txt', 'w') as f:
+    f.write('Hello, world!')",1,E111
+"class User(object):
+  def __init__(self, name):
+    self.name = name",0,E111
+"def add(a, b):
+  return a + b",0,E111
+"if True:
+  print('Yes')",0,E111
+"for i in range(5):
+  print(i)",0,E111
+"while True:
+  break",0,E111
+"def factorial(n):
+  if n == 0:
+    return 1
+  else:
+    return n * factorial(n-1)",0,E111
+"with open('file.txt', 'r') as f:
+  content = f.read()",0,E111
+"try:
+  1 / 0
+except ZeroDivisionError:
+  pass",0,E111
+"def is_even(n):
+  return n % 2 == 0",0,E111
+"class Animal:
+  def speak(self):
+    pass
+class Dog(Animal):
+  def speak(self):
+    return 'Woof!'",0,E111
+"for item in [1, 2, 3]:
+  print(item)",0,E111
+"def greet(name):
+  print(f'Hello, {name}!')",0,E111
+"x = 10
+while x > 0:
+  x -= 1",0,E111
+"names = ['Alice', 'Bob', 'Charlie']
+for name in names:
+  print(name)",0,E111
+"if x > 10:
+  print('x is greater than 10')
+else:
+  print('x is 10 or less')",0,E111
+"try:
+  result = some_function()
+except Exception as e:
+  print(e)",0,E111
+"def max(a, b):
+  if a > b:
+    return a
+  else:
+    return b",0,E111
+"class Car:
+  def __init__(self, model):
+    self.model = model",0,E111
+"if True:
+  pass
+else:
+  print('This won’t print')",0,E111
+"with open('file.txt', 'w') as f:
+  f.write('Hello, world!')",0,E111

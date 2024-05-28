@@ -1,0 +1,154 @@
+code,label,rule
+"def get_name(self):
+	if self.first_name and self.last_name:
+		return self.first_name + ' ' + self.last_name
+	else:
+		return self.last_name",1,E101
+"def greet(name):
+    print(f'Hello, {name}!')",1,E101
+"class Person:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        print(f'Hello, {self.name}!')",1,E101
+"for i in range(10):
+    print(i)",1,E101
+"def add(a, b):
+    return a + b",1,E101
+"while True:
+    break",1,E101
+"def foo(x):
+    if x > 0:
+        return 'positive'
+    else:
+        return 'non-positive'",1,E101
+"with open('file.txt', 'r') as f:
+    content = f.read()",1,E101
+"try:
+    1 / 0
+except ZeroDivisionError:
+    pass",1,E101
+"import os
+os.listdir('.')",1,E101
+"def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)",1,E101
+"class Animal:
+    def speak(self):
+        pass
+
+class Dog(Animal):
+    def speak(self):
+        return 'Woof!'",1,E101
+"def max(a, b):
+    if a > b:
+        return a
+    else:
+        return b",1,E101
+"for item in [1, 2, 3]:
+    print(item)",1,E101
+"if True:
+    print('Yes')",1,E101
+"names = ['Alice', 'Bob', 'Charlie']
+for name in names:
+    print(name)",1,E101
+"def is_even(n):
+    return n % 2 == 0",1,E101
+"try:
+    result = some_function()
+except Exception as e:
+    print(e)",1,E101
+"x = 10
+while x > 0:
+    x -= 1",1,E101
+"def hello():
+    print('Hello, world!')",1,E101
+"def get_name(self):
+    if self.first_name and self.last_name:
+		return self.first_name + ' ' + self.last_name
+    else:
+	return self.last_name",0,E101
+"def greet(name):
+    print(f'Hello, {name}!')
+	print('Welcome!')",0,E101
+"class Person:
+    def __init__(self, name):
+	self.name = name
+    def greet(self):
+        print(f'Hello, {self.name}!')",0,E101
+"for i in range(10):
+    calc(i)
+	print(i)
+
+print('Done')",0,E101
+"def add(a, b):
+    sum = a + b
+	return sum",0,E101
+"while True:
+    print('break')
+	break
+
+print('Loop ended')",0,E101
+"def foo(x):
+    if x > 0:
+		return 'positive'
+    else:
+	return 'non-positive'",0,E101
+"with open('file.txt', 'r') as f:
+    print('reading file')
+	content = f.read()
+    print(content)",0,E101
+"try:
+	1 / 0
+    print('Try block executed')
+except ZeroDivisionError:
+    pass",0,E101
+"def list_directory():
+    os.listdir('.')
+	print('Listed directory')",0,E101
+"def factorial(n):
+    if n == 0:
+		return 1
+    else:
+	return n * factorial(n-1)",0,E101
+"class Animal:
+    def speak(self):
+		pass
+class Dog(Animal):
+    def speak(self):
+        return 'Woof!'",0,E101
+"def max(a, b):
+    if a > b:
+		return a
+    else:
+	return b",0,E101
+"for item in [1, 2, 3]:
+	print(item)
+    add_to_list(item)
+    print('Done')",0,E101
+"if True:
+	print('Yes')
+    print('Maybe')",0,E101
+"names = ['Alice', 'Bob', 'Charlie']
+for name in names:
+    print(name)
+	print('End of loop')",0,E101
+"def is_even(n):
+    return n % 2 == 0
+	print('Checked evenness')",0,E101
+"try:
+	result = some_function()
+    print('Function called')
+except Exception as e:
+    print(e)",0,E101
+"x = 10
+while x > 0:
+    print(x)
+	x -= 1
+print('Decremented')",0,E101
+"def hello():
+	print('Hello, world!')
+    print('Greeting complete')",0,E101
