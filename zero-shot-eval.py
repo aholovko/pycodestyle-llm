@@ -3,7 +3,7 @@ import evaluate
 import logging
 import torch
 import numpy as np
-from transformers import LlamaForSequenceClassification, LlamaTokenizer, AutoTokenizer
+from transformers import LlamaForSequenceClassification, AutoTokenizer
 from datasets import load_dataset
 from tqdm import tqdm
 
@@ -34,19 +34,26 @@ def empty_cache(device):
             from torch.mps import empty_cache as mps_empty_cache
             mps_empty_cache()
         except ImportError:
-            logger.warning("mps_empty_cache() function is not available!")
+            logger.warning("mps_empty_cache() function is not available.")
 
 
 def load_model_and_tokenizer(model_name, device):
     """Load the appropriate model and tokenizer based on the model name."""
-    if model_name == "llama2":
-        model = LlamaForSequenceClassification.from_pretrained("meta-llama/Llama-2-7b-hf", num_labels=2).to(device)
-        tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
-    elif model_name == "llama3":
-        model = LlamaForSequenceClassification.from_pretrained("meta-llama/Meta-Llama-3-8B", num_labels=2).to(device)
-        tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B")
-    else:
-        raise ValueError("Invalid model name. Choose 'llama2' or 'llama3'.")
+    match model_name:
+        case "llama2":
+            model_id = "meta-llama/Llama-2-7b-hf"
+        case "llama3":
+            model_id = "meta-llama/Meta-Llama-3-8B"
+        case "code-llama":
+            model_id = "codellama/CodeLlama-7b-hf"
+        case "code-llama-py":
+            model_id = "codellama/CodeLlama-7b-Python-hf"
+        case _:
+            raise ValueError("Not supported model.")
+
+    model = LlamaForSequenceClassification.from_pretrained(model_id, num_labels=2).to(device)
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+
     return model, tokenizer
 
 
@@ -99,8 +106,9 @@ def run(model_name, num_iterations):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Zero-Shot Evaluation for Llama 2 and Llama 3")
-    parser.add_argument("--model", type=str, required=True, choices=["llama2", "llama3"], help="Model to evaluate")
+    parser = argparse.ArgumentParser(description="Zero-Shot Evaluation for Llama models")
+    parser.add_argument("--model", type=str, required=True, choices=["llama2", "llama3", "code-llama", "code-llama-py"],
+                        help="Model to evaluate")
     parser.add_argument("--iterations", type=int, default=10, help="Number of iterations")
     args = parser.parse_args()
 
