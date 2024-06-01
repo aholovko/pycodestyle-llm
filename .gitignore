@@ -3,5 +3,6 @@
 .DS_Store
 .ipynb_checkpoints/
 .env
+llama-tuned/
 venv/
 wandb/

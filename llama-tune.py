@@ -6,27 +6,24 @@ from transformers import AutoTokenizer, LlamaTokenizer, LlamaForSequenceClassifi
 from transformers import TrainingArguments, Trainer, DataCollatorWithPadding
 from peft import get_peft_model, LoraConfig, TaskType
 import evaluate
-import wandb
 
 # Constants
 DATASET_NAME = "aholovko/pep8_indentation_compliance"
 LLAMA_2_MODEL_ID = "meta-llama/Llama-2-7b-hf"
 LLAMA_3_MODEL_ID = "meta-llama/Meta-Llama-3-8B"
-WANDB_PROJECT_NAME = "pycodestyle-llm"
+WANDB_PROJECT = "pycodestyle-llm"
 
 
 def get_model_id(model_type):
-    if model_type == "llama2":
-        return LLAMA_2_MODEL_ID
-    elif model_type == "llama3":
-        return LLAMA_3_MODEL_ID
-    else:
-        raise ValueError("Unsupported model type specified")
+    model_ids = {
+        "llama2": LLAMA_2_MODEL_ID,
+        "llama3": LLAMA_3_MODEL_ID
+    }
+    return model_ids.get(model_type, ValueError("Unsupported model type specified"))
 
 
 class LlamaIndentationComplianceTrainer:
-    def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout):
-        self.model_type = model_type
+    def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout, use_wandb):
         self.model_id = get_model_id(model_type)
         self.epochs = epochs
         self.batch_size = batch_size
@@ -34,6 +31,7 @@ class LlamaIndentationComplianceTrainer:
         self.lora_r = lora_r
         self.lora_alpha = lora_alpha
         self.lora_dropout = lora_dropout
+        self.use_wandb = use_wandb
 
         # Load and preprocess dataset
         self.dataset = load_dataset(DATASET_NAME)
@@ -41,7 +39,7 @@ class LlamaIndentationComplianceTrainer:
         self.tokenizer = self.initialize_tokenizer()
         self.dataset = self.dataset.map(self.tokenize_text, batched=True)
 
-        # Define train and validation datasets
+        # Set train and validation datasets
         self.train_dataset = self.dataset["train"]
         self.eval_dataset = self.dataset["validation"]
 
@@ -107,7 +105,7 @@ class LlamaIndentationComplianceTrainer:
             logging_steps=len(self.train_dataset) // self.batch_size,
             save_strategy="no",
             load_best_model_at_end=False,
-            report_to="wandb",
+            report_to="wandb" if self.use_wandb else [],
             push_to_hub=False
         )
 
@@ -134,7 +132,8 @@ class LlamaIndentationComplianceTrainer:
         self.model.save_pretrained("llama-tuned")
 
 
-if __name__ == "__main__":
+def main():
+    # Parse arguments
     parser = argparse.ArgumentParser(description="Train Llama model for indentation compliance classification")
     parser.add_argument("--model", type=str, required=True, choices=["llama2", "llama3"], help="Specify the model")
     parser.add_argument('--epochs', type=int, required=True, help="Specify the number of training epochs")
@@ -143,22 +142,37 @@ if __name__ == "__main__":
     parser.add_argument('--lora_r', type=int, default=12, help="Specify the r parameter for LoRA")
     parser.add_argument('--lora_alpha', type=int, default=32, help="Specify the alpha parameter for LoRA")
     parser.add_argument('--lora_dropout', type=float, default=0.1, help="Specify the dropout rate for LoRA")
-
+    parser.add_argument('--use_wandb', action='store_true', help="Use Weights & Biases for reporting")
     args = parser.parse_args()
 
-    os.environ["WANDB_PROJECT"] = WANDB_PROJECT_NAME
-    os.environ["WANDB_LOG_MODEL"] = "true"
-    os.environ["WANDB_WATCH"] = "false"
+    wandb = None
+    if args.use_wandb:
+        import wandb
+        os.environ["WANDB_PROJECT"] = WANDB_PROJECT
+        os.environ["WANDB_LOG_MODEL"] = "true"
+        os.environ["WANDB_WATCH"] = "false"
+        wandb.init(config=vars(args), project=WANDB_PROJECT)
+        config = wandb.config
+    else:
+        config = args
 
+    # Run training
     trainer = LlamaIndentationComplianceTrainer(
-        model_type=args.model,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        learning_rate=args.learning_rate,
-        lora_r=args.lora_r,
-        lora_alpha=args.lora_alpha,
-        lora_dropout=args.lora_dropout
+        model_type=config.model,
+        epochs=config.epochs,
+        batch_size=config.batch_size,
+        learning_rate=config.learning_rate,
+        lora_r=config.lora_r,
+        lora_alpha=config.lora_alpha,
+        lora_dropout=config.lora_dropout,
+        use_wandb=args.use_wandb
     )
     trainer.train()
     trainer.save()
-    wandb.finish()
+
+    if wandb:
+        wandb.finish()
+
+
+if __name__ == "__main__":
+    main()
