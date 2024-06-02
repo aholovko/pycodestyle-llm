@@ -1,17 +1,26 @@
 import argparse
 import os
+import random
 import numpy as np
+import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, LlamaTokenizer, LlamaForSequenceClassification
 from transformers import TrainingArguments, Trainer, DataCollatorWithPadding
 from peft import get_peft_model, LoraConfig, TaskType
 import evaluate
 
-# Constants
 DATASET_NAME = "aholovko/pep8_indentation_compliance"
 LLAMA_2_MODEL_ID = "meta-llama/Llama-2-7b-hf"
 LLAMA_3_MODEL_ID = "meta-llama/Meta-Llama-3-8B"
 WANDB_PROJECT = "pycodestyle-llm"
+
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)
 
 
 def get_model_id(model_type):
@@ -19,12 +28,16 @@ def get_model_id(model_type):
         "llama2": LLAMA_2_MODEL_ID,
         "llama3": LLAMA_3_MODEL_ID
     }
-    return model_ids.get(model_type, ValueError("Unsupported model type specified"))
+    return model_ids.get(model_type, None)
 
 
 class LlamaIndentationComplianceTrainer:
-    def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout, use_wandb):
+    def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout, use_wandb,
+                 seed=None):
         self.model_id = get_model_id(model_type)
+        if self.model_id is None:
+            raise ValueError("Unsupported model type specified")
+
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -32,6 +45,10 @@ class LlamaIndentationComplianceTrainer:
         self.lora_alpha = lora_alpha
         self.lora_dropout = lora_dropout
         self.use_wandb = use_wandb
+        self.seed = seed
+
+        if self.seed is not None:
+            set_seed(self.seed)
 
         # Load and preprocess dataset
         self.dataset = load_dataset(DATASET_NAME)
@@ -94,7 +111,7 @@ class LlamaIndentationComplianceTrainer:
         return model
 
     def create_training_args(self):
-        return TrainingArguments(
+        args = TrainingArguments(
             output_dir="llama-tuned",
             learning_rate=self.learning_rate,
             per_device_train_batch_size=self.batch_size,
@@ -106,8 +123,13 @@ class LlamaIndentationComplianceTrainer:
             save_strategy="no",
             load_best_model_at_end=False,
             report_to="wandb" if self.use_wandb else [],
-            push_to_hub=False
+            push_to_hub=False,
         )
+
+        if self.seed is not None:
+            args.seed = self.seed
+
+        return args
 
     def create_trainer(self):
         return Trainer(
@@ -142,6 +164,7 @@ def main():
     parser.add_argument('--lora_r', type=int, default=12, help="Specify the r parameter for LoRA")
     parser.add_argument('--lora_alpha', type=int, default=32, help="Specify the alpha parameter for LoRA")
     parser.add_argument('--lora_dropout', type=float, default=0.1, help="Specify the dropout rate for LoRA")
+    parser.add_argument('--seed', type=int, help="Specify the seed value for reproducibility")
     parser.add_argument('--use_wandb', action='store_true', help="Use Weights & Biases for reporting")
     args = parser.parse_args()
 
@@ -165,12 +188,13 @@ def main():
         lora_r=config.lora_r,
         lora_alpha=config.lora_alpha,
         lora_dropout=config.lora_dropout,
+        seed=config.seed if config.seed else None,
         use_wandb=args.use_wandb
     )
     trainer.train()
     trainer.save()
 
-    if wandb:
+    if args.use_wandb:
         wandb.finish()
 
 
