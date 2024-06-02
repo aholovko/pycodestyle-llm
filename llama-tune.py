@@ -84,6 +84,8 @@ class LlamaIndentationComplianceTrainer:
             tokenizer.pad_token = tokenizer.unk_token
         else:
             tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+            tokenizer.padding_side = "left"
+            tokenizer.pad_token = tokenizer.eos_token
         return tokenizer
 
     def tokenize_text(self, examples):
@@ -156,7 +158,7 @@ class LlamaIndentationComplianceTrainer:
 
 def main():
     # Parse arguments
-    parser = argparse.ArgumentParser(description="Train Llama model for indentation compliance classification")
+    parser = argparse.ArgumentParser(description="Train Llama model to check PEP8 indentation compliance")
     parser.add_argument("--model", type=str, required=True, choices=["llama2", "llama3"], help="Specify the model")
     parser.add_argument('--epochs', type=int, required=True, help="Specify the number of training epochs")
     parser.add_argument('--batch_size', type=int, default=8, help="Specify the batch size for training")
