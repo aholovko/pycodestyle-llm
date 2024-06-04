@@ -5,14 +5,15 @@ metric:
   goal: maximize
 parameters:
   model:
-    values: ["llama2"]
+    values: ["llama2", "llama3"]
   epochs:
-    min: 3
-    max: 5
+    values: [3, 4, 5]
   batch_size:
     values: [4, 8, 16]
   learning_rate:
-    values: [1e-5, 5e-5, 1e-3]
+    distribution: "log_uniform_values"
+    min: 0.0001
+    max: 0.1
   lora_r:
     values: [4, 8, 12]
   lora_alpha:
