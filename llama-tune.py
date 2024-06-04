@@ -8,7 +8,9 @@ from transformers import AutoTokenizer, LlamaTokenizer, LlamaForSequenceClassifi
 from transformers import TrainingArguments, Trainer, DataCollatorWithPadding
 from peft import get_peft_model, LoraConfig, TaskType
 import evaluate
+from dfa_trainer import DFATrainer
 
+# Constants
 DATASET_NAME = "aholovko/pep8_indentation_compliance"
 LLAMA_2_MODEL_ID = "meta-llama/Llama-2-7b-hf"
 LLAMA_3_MODEL_ID = "meta-llama/Meta-Llama-3-8B"
@@ -16,6 +18,7 @@ WANDB_PROJECT = "pycodestyle-llm"
 
 
 def set_seed(seed):
+    """Set seed for reproducibility."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -24,6 +27,7 @@ def set_seed(seed):
 
 
 def get_model_id(model_type):
+    """Get model ID based on model type."""
     model_ids = {
         "llama2": LLAMA_2_MODEL_ID,
         "llama3": LLAMA_3_MODEL_ID
@@ -33,7 +37,7 @@ def get_model_id(model_type):
 
 class LlamaIndentationComplianceTrainer:
     def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout, use_wandb,
-                 seed=None):
+                 use_dfa_trainer, seed=None):
         self.model_id = get_model_id(model_type)
         if self.model_id is None:
             raise ValueError("Unsupported model type specified")
@@ -45,6 +49,7 @@ class LlamaIndentationComplianceTrainer:
         self.lora_alpha = lora_alpha
         self.lora_dropout = lora_dropout
         self.use_wandb = use_wandb
+        self.use_dfa_trainer = use_dfa_trainer
         self.seed = seed
 
         if self.seed is not None:
@@ -72,12 +77,14 @@ class LlamaIndentationComplianceTrainer:
         self.trainer = self.create_trainer()
 
     def create_label_mappings(self):
+        """Create label mappings."""
         features = self.dataset["train"].features
         id2label = {idx: features["label"].int2str(idx) for idx in range(2)}
         label2id = {v: k for k, v in id2label.items()}
         return id2label, label2id
 
     def initialize_tokenizer(self):
+        """Initialize tokenizer."""
         if self.model_id == LLAMA_2_MODEL_ID:
             tokenizer = LlamaTokenizer.from_pretrained(self.model_id)
             tokenizer.padding_side = "left"
@@ -89,9 +96,11 @@ class LlamaIndentationComplianceTrainer:
         return tokenizer
 
     def tokenize_text(self, examples):
+        """Tokenize text examples."""
         return self.tokenizer(examples["code"], truncation=True, max_length=512, padding='longest')
 
     def initialize_model(self):
+        """Initialize the model."""
         return LlamaForSequenceClassification.from_pretrained(
             self.model_id,
             num_labels=2,
@@ -101,6 +110,7 @@ class LlamaIndentationComplianceTrainer:
         )
 
     def apply_lora(self, model):
+        """Apply LoRA configuration to the model."""
         peft_config = LoraConfig(
             task_type=TaskType.SEQ_CLS,
             inference_mode=False,
@@ -113,6 +123,7 @@ class LlamaIndentationComplianceTrainer:
         return model
 
     def create_training_args(self):
+        """Create training arguments."""
         args = TrainingArguments(
             output_dir="llama-tuned",
             learning_rate=self.learning_rate,
@@ -125,7 +136,7 @@ class LlamaIndentationComplianceTrainer:
             save_strategy="no",
             load_best_model_at_end=False,
             report_to="wandb" if self.use_wandb else [],
-            push_to_hub=False,
+            push_to_hub=False
         )
 
         if self.seed is not None:
@@ -134,7 +145,9 @@ class LlamaIndentationComplianceTrainer:
         return args
 
     def create_trainer(self):
-        return Trainer(
+        """Create trainer instance."""
+        trainer_class = DFATrainer if self.use_dfa_trainer else Trainer
+        return trainer_class(
             model=self.model,
             args=self.training_args,
             train_dataset=self.train_dataset,
@@ -145,14 +158,17 @@ class LlamaIndentationComplianceTrainer:
         )
 
     def compute_metrics(self, eval_pred):
+        """Compute evaluation metrics."""
         logits, labels = eval_pred
         predictions = np.argmax(logits, axis=1)
         return self.metric.compute(predictions=predictions, references=labels)
 
     def train(self):
+        """Train the model."""
         self.trainer.train()
 
     def save(self):
+        """Save the trained model."""
         self.model.save_pretrained("llama-tuned")
 
 
@@ -168,6 +184,7 @@ def main():
     parser.add_argument('--lora_dropout', type=float, default=0.1, help="Specify the dropout rate for LoRA")
     parser.add_argument('--seed', type=int, help="Specify the seed value for reproducibility")
     parser.add_argument('--use_wandb', action='store_true', help="Use Weights & Biases for reporting")
+    parser.add_argument('--use_dfa_trainer', action='store_true', help="Use DFA trainer with custom loss function")
     args = parser.parse_args()
 
     wandb = None
@@ -191,7 +208,8 @@ def main():
         lora_alpha=config.lora_alpha,
         lora_dropout=config.lora_dropout,
         seed=config.seed if config.seed else None,
-        use_wandb=args.use_wandb
+        use_wandb=args.use_wandb,
+        use_dfa_trainer=args.use_dfa_trainer
     )
     trainer.train()
     trainer.save()
