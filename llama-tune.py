@@ -36,8 +36,8 @@ def get_model_id(model_type):
 
 
 class LlamaIndentationComplianceTrainer:
-    def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout, use_wandb,
-                 use_dfa_trainer, seed=None):
+    def __init__(self, model_type, epochs, batch_size, learning_rate, lora_r, lora_alpha, lora_dropout, output_dir,
+                 use_wandb, use_dfa_trainer, seed=None):
         self.model_id = get_model_id(model_type)
         if self.model_id is None:
             raise ValueError("Unsupported model type specified")
@@ -48,6 +48,7 @@ class LlamaIndentationComplianceTrainer:
         self.lora_r = lora_r
         self.lora_alpha = lora_alpha
         self.lora_dropout = lora_dropout
+        self.output_dir = output_dir
         self.use_wandb = use_wandb
         self.use_dfa_trainer = use_dfa_trainer
         self.seed = seed
@@ -125,7 +126,7 @@ class LlamaIndentationComplianceTrainer:
     def create_training_args(self):
         """Create training arguments."""
         args = TrainingArguments(
-            output_dir="llama-tuned",
+            output_dir=self.output_dir,
             learning_rate=self.learning_rate,
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
@@ -169,7 +170,7 @@ class LlamaIndentationComplianceTrainer:
 
     def save(self):
         """Save the trained model."""
-        self.model.save_pretrained("llama-tuned")
+        self.model.save_pretrained(self.output_dir)
 
 
 def main():
@@ -183,6 +184,7 @@ def main():
     parser.add_argument('--lora_alpha', type=int, default=32, help="Specify the alpha parameter for LoRA")
     parser.add_argument('--lora_dropout', type=float, default=0.1, help="Specify the dropout rate for LoRA")
     parser.add_argument('--seed', type=int, help="Specify the seed value for reproducibility")
+    parser.add_argument('--output_dir', type=str, default="llama-tuned", help="Output directory for saving the model")
     parser.add_argument('--use_wandb', action='store_true', help="Use Weights & Biases for reporting")
     parser.add_argument('--use_dfa_trainer', action='store_true', help="Use DFA trainer with custom loss function")
     args = parser.parse_args()
@@ -195,8 +197,10 @@ def main():
         os.environ["WANDB_WATCH"] = "false"
         wandb.init(config=vars(args), project=WANDB_PROJECT)
         config = wandb.config
+        output_dir = os.path.join(config.output_dir, wandb.run.name)
     else:
         config = args
+        output_dir = config.output_dir
 
     # Run training
     trainer = LlamaIndentationComplianceTrainer(
@@ -207,6 +211,7 @@ def main():
         lora_r=config.lora_r,
         lora_alpha=config.lora_alpha,
         lora_dropout=config.lora_dropout,
+        output_dir=output_dir,
         seed=config.seed if config.seed else None,
         use_wandb=args.use_wandb,
         use_dfa_trainer=args.use_dfa_trainer
